@@ -1,0 +1,23 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    facets (3.1.0)
+    ffi (1.9.18-x86-mingw32)
+    ffi-win32-extensions (1.0.3)
+      ffi
+    sys-filesystem (1.1.9)
+      ffi
+    win32-service (0.8.10)
+      ffi
+      ffi-win32-extensions
+
+PLATFORMS
+  x86-mingw32
+
+DEPENDENCIES
+  facets
+  sys-filesystem
+  win32-service
+
+BUNDLED WITH
+   1.15.3
