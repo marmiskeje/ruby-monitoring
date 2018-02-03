@@ -1,3 +1,5 @@
+require_relative "ExecutableCommand"
+
 class ErrorHandlingCommand < ExecutableCommand
   def on_execute()
     if @successor.nil? == false

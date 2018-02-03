@@ -5,15 +5,7 @@ GEM
     bunny (2.9.1)
       amq-protocol (~> 2.3.0)
     concurrent-ruby (1.0.5)
-    facets (3.1.0)
-    ffi (1.9.18-x86-mingw32)
-    ffi-win32-extensions (1.0.3)
-      ffi
-    sys-filesystem (1.1.9)
-      ffi
-    win32-service (0.8.10)
-      ffi
-      ffi-win32-extensions
+    redis (4.0.1)
 
 PLATFORMS
   x86-mingw32
@@ -21,9 +13,7 @@ PLATFORMS
 DEPENDENCIES
   bunny (>= 2.9.0)
   concurrent-ruby
-  facets
-  sys-filesystem
-  win32-service
+  redis
 
 BUNDLED WITH
    1.15.3
