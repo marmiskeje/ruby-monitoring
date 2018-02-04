@@ -10,4 +10,8 @@ class BaseMessage
   def serialize()
     Marshal::dump(self)
   end
+
+  def self.deserialize(data)
+    Marshal::load(data)
+  end
 end

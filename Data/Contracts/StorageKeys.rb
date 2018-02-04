@@ -1,0 +1,1 @@
+STORAGE_KEY_ALL_SERVERS = "Monitoring.AllServers"

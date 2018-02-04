@@ -1,24 +1,31 @@
 require 'set'
+require "../../Data/Contracts/StorageKeys"
+require "../../Data/Contracts/ServerConfiguration"
+require "../../Data/Contracts/ServerData"
+require "../../Data/Contracts/AllServersData"
+require "../../Common/Storage"
 require "../../Common/ExecutableCommand"
 require "../../Common/ErrorHandlingCommand"
 require "../../Common/ExecutableCommandChainCreator"
 require "../../Common/CommandProcessingQueue"
 require "../../Messaging/Contracts/Constants"
+require "../../Messaging/Contracts/BaseMessage"
 require "../../Messaging/Contracts/ServerPingMessage"
 require "../../Messaging/Contracts/MonitoringClientStartedMessage"
 require "../../Messaging/Contracts/MonitoringClientConfigurationMessage"
-require "../../Data/Contracts/ServerConfiguration"
+require "./Internal/Storages/AllServersStorage"
 require "./Internal/Contexts/MonitoringClientStartedContext"
-require "./Internal/Commands/CreateServerIfNeededCommand"
+require "./Internal/Commands/CreateOrUpdateServerIfNeededCommand"
 require "./Internal/Commands/LoadServerConfigurationCommand"
 require "./Internal/Commands/CreateClientConfigurationMessage"
 require "./Internal/Commands/SendMqMessageCommand"
 require "./Internal/CommandChainFactories/MonitoringCommandChainFactory"
 
 class Server
-  def initialize(mq_client)
+  def initialize(mq_client, redis)
+    @all_servers_storage = AllServersStorage.new(redis)
     @communication_queue = CommandProcessingQueue.new
-    @chain_factory = MonitoringCommandChainFactory.new(mq_client)
+    @chain_factory = MonitoringCommandChainFactory.new(mq_client, @all_servers_storage)
     @subscription_channel = create_subscriptions(mq_client)
   end
 
@@ -41,7 +48,7 @@ class Server
     queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_STARTED})
     
     queue.subscribe do |delivery_info, metadata, payload|
-      message = Marshal::load(payload)
+      message = BaseMessage.deserialize(payload)
       case message.message_id
         when MESSAGE_ID_MONITORING_CLIENT_STARTED
           context = MonitoringClientStartedContext.new

@@ -7,10 +7,12 @@ require "./Internal/Server"
 
 mq_client = Bunny.new
 mq_client.start
-Server.new(mq_client)
+redis = Redis.new
+Server.new(mq_client, redis)
 
 gets()
 mq_client.stop
+redis.close
 
 #redis.set("test", "hodnota", {:ex => 10})
 # queue = CommandProcessingQueue.new
