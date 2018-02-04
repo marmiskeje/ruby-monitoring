@@ -25,7 +25,7 @@ class CreateOrUpdateServicesDataCommand < ExecutableCommand
         event.state = s.state
         service_data.events.add(event)
         services_data.services[s.name] = service_data
-        puts("updated changed service!! " + s.name + " " + event.to_s)
+        puts("updated service!! " + s.name + " " + event.to_s)
       end
       @services_storage.set(@context.message.server_name, services_data)
     end

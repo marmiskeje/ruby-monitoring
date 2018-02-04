@@ -22,7 +22,7 @@ class ServiceEvent
     @state = "unknown"
   end
 
-  def <=> (other) #1 if self>other; 0 if self==other; -1 if self<other
+  def <=> (other)
      other.date <=> @date
   end
 

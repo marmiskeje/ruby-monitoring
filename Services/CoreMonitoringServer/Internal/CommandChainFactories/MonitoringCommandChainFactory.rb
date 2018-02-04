@@ -1,8 +1,9 @@
 class MonitoringCommandChainFactory
-  def initialize(mq_client, all_servers_storage, services_storage)
+  def initialize(mq_client, all_servers_storage, services_storage, hddsStorage)
     @mq_client = mq_client
     @all_servers_storage = all_servers_storage
     @services_storage = services_storage
+    @hddsStorage = hddsStorage
   end
 
   def client_started_chain(context)
@@ -26,4 +27,9 @@ class MonitoringCommandChainFactory
     chain_creator.first_command
   end
 
+  def hdds_changed_chain(context)
+    chain_creator = ExecutableCommandChainCreator.new
+    chain_creator.add(CreateOrUpdateHddsDataCommand.new(context, @hddsStorage))
+    chain_creator.first_command
+  end
 end

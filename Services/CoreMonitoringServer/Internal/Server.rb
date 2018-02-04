@@ -4,6 +4,7 @@ require "../../Data/Contracts/ServerConfiguration"
 require "../../Data/Contracts/ServerData"
 require "../../Data/Contracts/AllServersData"
 require "../../Data/Contracts/ServicesData"
+require "../../Data/Contracts/HddsData"
 require "../../Common/Storage"
 require "../../Common/ExecutableCommand"
 require "../../Common/ErrorHandlingCommand"
@@ -20,23 +21,28 @@ require "../../Messaging/Contracts/ServicesChangedEventMessage"
 require "../../Messaging/Contracts/HddsChangedEventMessage"
 require "./Internal/Storages/AllServersStorage"
 require "./Internal/Storages/ServicesStorage"
+require "./Internal/Storages/HddsStorage"
 require "./Internal/Contexts/MonitoringClientStartedContext"
 require "./Internal/Contexts/ServerPingContext"
 require "./Internal/Contexts/ServicesChangedContext"
+require "./Internal/Contexts/HddsChangedContext"
 require "./Internal/Commands/CreateOrUpdateServerIfNeededCommand"
 require "./Internal/Commands/LoadServerConfigurationCommand"
 require "./Internal/Commands/CreateClientConfigurationMessage"
 require "./Internal/Commands/SendMqMessageCommand"
 require "./Internal/Commands/CreateOrUpdateServicesDataCommand"
+require "./Internal/Commands/CreateOrUpdateHddsDataCommand"
 require "./Internal/CommandChainFactories/MonitoringCommandChainFactory"
 
 class Server
   def initialize(mq_client, redis)
     @all_servers_storage = AllServersStorage.new(redis)
     @services_storage = ServicesStorage.new(redis)
+    @hddsStorage = HddsStorage.new(redis)
     @communication_queue = CommandProcessingQueue.new
-    @data_queue = CommandProcessingQueue.new
-    @chain_factory = MonitoringCommandChainFactory.new(mq_client, @all_servers_storage, @services_storage)
+    @services_data_queue = CommandProcessingQueue.new
+    @drives_data_queue = CommandProcessingQueue.new
+    @chain_factory = MonitoringCommandChainFactory.new(mq_client, @all_servers_storage, @services_storage, @hddsStorage)
     @subscription_channel = create_subscriptions(mq_client)
   end
 
@@ -47,7 +53,8 @@ class Server
   def stop()
     @subscription_channel.close()
     @communication_queue.dispose()
-    @data_queue.dispose()
+    @services_data_queue.dispose()
+    @drives_data_queue.dispose()
   end
 
   private
@@ -80,7 +87,11 @@ class Server
         when MESSAGE_ID_SERVICES_CHANGED_EVENT
           context = ServicesChangedContext.new
           context.message = message
-          @data_queue.enqueue(@chain_factory.services_changed_chain(context))
+          @services_data_queue.enqueue(@chain_factory.services_changed_chain(context))
+        when MESSAGE_ID_HDDS_CHANGED_EVENT
+          context = HddsChangedContext.new
+          context.message = message
+          @drives_data_queue.enqueue(@chain_factory.hdds_changed_chain(context))
       end
     end
     return ch
