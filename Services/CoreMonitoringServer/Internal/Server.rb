@@ -36,7 +36,8 @@ class Server
     ch = mq_client.create_channel
     ch.exchange_declare(EXCHANGE_MONITORING_SERVER_PING, "topic", opts = { :durable => true })
     ch.exchange_declare(EXCHANGE_MONITORING_COMMUNICATION, "topic", opts = { :durable => true })
-    queue = ch.queue("CoreMonitoringServerCommunicationQueue", :durable => false)
+    ch.exchange_declare(EXCHANGE_MONITORING_DATA, "topic", opts = { :durable => true })
+    queue = ch.queue("CoreMonitoringServerCommunicationQueue", :durable => true)
     queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_STARTED})
     
     queue.subscribe do |delivery_info, metadata, payload|

@@ -7,9 +7,13 @@ require "../../Common/CommandProcessingQueue"
 require "./Contracts/ServiceInfo"
 require "./Contracts/HardDriveInfo"
 require "../../Messaging/Contracts/Constants"
+require "../../Messaging/Contracts/Data/WatchedHddInfo"
+require "../../Messaging/Contracts/Data/WatchedServiceInfo"
 require "../../Messaging/Contracts/ServerPingMessage"
 require "../../Messaging/Contracts/MonitoringClientStartedMessage"
 require "../../Messaging/Contracts/MonitoringClientConfigurationMessage"
+require "../../Messaging/Contracts/HddsChangedEventMessage"
+require "../../Messaging/Contracts/ServicesChangedEventMessage"
 require "./Internal/Contexts/MessagingContext"
 require "./Internal/Contexts/ServicesMonitoringContext"
 require "./Internal/Contexts/HardDrivesMonitoringContext"
@@ -73,7 +77,7 @@ class Server
     end
   end
 
-  def dispose()
+  def dispose
     stop()
     @subscription_channel.close()
     @processing_queue.dispose()
@@ -105,7 +109,7 @@ class Server
 
   def create_subscriptions(mq_client)
     ch = mq_client.create_channel
-    queue = ch.queue(Socket.gethostname + "ClientQueue", opts = {:durable => false})
+    queue = ch.queue(Socket.gethostname + "ClientQueue", opts = {:durable => false, :exclusive => true})
     queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_CONFIGURATION + "." + Socket.gethostname})
     
     queue.subscribe do |delivery_info, metadata, payload|

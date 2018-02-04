@@ -1,6 +1,9 @@
 EXCHANGE_MONITORING_SERVER_PING = "monitoring_server_ping_exchange"
 EXCHANGE_MONITORING_COMMUNICATION = "monitoring_communication_exchange"
+EXCHANGE_MONITORING_DATA = "monitoring_data_exchange"
 
 MESSAGE_ID_SERVER_PING = "ServerPingMessage"
 MESSAGE_ID_MONITORING_CLIENT_STARTED = "MonitoringClientStartedMessage"
 MESSAGE_ID_MONITORING_CLIENT_CONFIGURATION = "MonitoringClientConfigurationMessage"
+MESSAGE_ID_HDDS_CHANGED_EVENT = "HddsChangedEventMessage"
+MESSAGE_ID_SERVICES_CHANGED_EVENT = "ServicesChangedEventMessage"

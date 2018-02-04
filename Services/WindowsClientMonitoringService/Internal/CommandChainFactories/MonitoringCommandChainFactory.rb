@@ -12,6 +12,7 @@ class MonitoringCommandChainFactory
     chain_creator.add(CompareServicesCommand.new(context, @data_service.services))
     chain_creator.add(UpdateServicesToLatestCommand.new(context, @data_service))
     chain_creator.add(GenerateServicesEventsCommand.new(context))
+    chain_creator.add(SendMqMessageCommand.new(context, @mq_client))
     chain_creator.first_command
   end
 
@@ -22,6 +23,7 @@ class MonitoringCommandChainFactory
     chain_creator.add(CompareHardDrivesCommand.new(context, @data_service.drives))
     chain_creator.add(UpdateDrivesToLatestCommand.new(context, @data_service))
     chain_creator.add(GenerateHardDriveEventsCommand.new(context))
+    chain_creator.add(SendMqMessageCommand.new(context, @mq_client))
     chain_creator.first_command
   end
 
