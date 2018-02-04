@@ -3,29 +3,40 @@ require "../../Data/Contracts/StorageKeys"
 require "../../Data/Contracts/ServerConfiguration"
 require "../../Data/Contracts/ServerData"
 require "../../Data/Contracts/AllServersData"
+require "../../Data/Contracts/ServicesData"
 require "../../Common/Storage"
 require "../../Common/ExecutableCommand"
 require "../../Common/ErrorHandlingCommand"
 require "../../Common/ExecutableCommandChainCreator"
 require "../../Common/CommandProcessingQueue"
+require "../../Messaging/Contracts/Data/WatchedHddInfo"
+require "../../Messaging/Contracts/Data/WatchedServiceInfo"
 require "../../Messaging/Contracts/Constants"
 require "../../Messaging/Contracts/BaseMessage"
 require "../../Messaging/Contracts/ServerPingMessage"
 require "../../Messaging/Contracts/MonitoringClientStartedMessage"
 require "../../Messaging/Contracts/MonitoringClientConfigurationMessage"
+require "../../Messaging/Contracts/ServicesChangedEventMessage"
+require "../../Messaging/Contracts/HddsChangedEventMessage"
 require "./Internal/Storages/AllServersStorage"
+require "./Internal/Storages/ServicesStorage"
 require "./Internal/Contexts/MonitoringClientStartedContext"
+require "./Internal/Contexts/ServerPingContext"
+require "./Internal/Contexts/ServicesChangedContext"
 require "./Internal/Commands/CreateOrUpdateServerIfNeededCommand"
 require "./Internal/Commands/LoadServerConfigurationCommand"
 require "./Internal/Commands/CreateClientConfigurationMessage"
 require "./Internal/Commands/SendMqMessageCommand"
+require "./Internal/Commands/CreateOrUpdateServicesDataCommand"
 require "./Internal/CommandChainFactories/MonitoringCommandChainFactory"
 
 class Server
   def initialize(mq_client, redis)
     @all_servers_storage = AllServersStorage.new(redis)
+    @services_storage = ServicesStorage.new(redis)
     @communication_queue = CommandProcessingQueue.new
-    @chain_factory = MonitoringCommandChainFactory.new(mq_client, @all_servers_storage)
+    @data_queue = CommandProcessingQueue.new
+    @chain_factory = MonitoringCommandChainFactory.new(mq_client, @all_servers_storage, @services_storage)
     @subscription_channel = create_subscriptions(mq_client)
   end
 
@@ -36,6 +47,7 @@ class Server
   def stop()
     @subscription_channel.close()
     @communication_queue.dispose()
+    @data_queue.dispose()
   end
 
   private
@@ -46,6 +58,9 @@ class Server
     ch.exchange_declare(EXCHANGE_MONITORING_DATA, "topic", opts = { :durable => true })
     queue = ch.queue("CoreMonitoringServerCommunicationQueue", :durable => true)
     queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_STARTED})
+    queue.bind(EXCHANGE_MONITORING_SERVER_PING, opts = {:routing_key => MESSAGE_ID_SERVER_PING})
+    queue.bind(EXCHANGE_MONITORING_DATA, opts = {:routing_key => MESSAGE_ID_SERVICES_CHANGED_EVENT})
+    queue.bind(EXCHANGE_MONITORING_DATA, opts = {:routing_key => MESSAGE_ID_HDDS_CHANGED_EVENT})
     
     queue.subscribe do |delivery_info, metadata, payload|
       message = BaseMessage.deserialize(payload)
@@ -54,7 +69,18 @@ class Server
           context = MonitoringClientStartedContext.new
           context.server_name = message.server_name
           context.ip_addresses = message.ip_addresses
+          context.event_date = message.event_date
           @communication_queue.enqueue(@chain_factory.client_started_chain(context))
+        when MESSAGE_ID_SERVER_PING
+          context = ServerPingContext.new
+          context.server_name = message.server_name
+          context.ip_addresses = message.ip_addresses
+          context.event_date = message.event_date
+          @communication_queue.enqueue(@chain_factory.server_ping_chain(context))
+        when MESSAGE_ID_SERVICES_CHANGED_EVENT
+          context = ServicesChangedContext.new
+          context.message = message
+          @data_queue.enqueue(@chain_factory.services_changed_chain(context))
       end
     end
     return ch

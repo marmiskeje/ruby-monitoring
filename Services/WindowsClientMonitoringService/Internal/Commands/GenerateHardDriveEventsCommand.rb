@@ -1,3 +1,4 @@
+require 'date'
 class GenerateHardDriveEventsCommand < ExecutableCommand
   def initialize(context)
     super()
@@ -7,6 +8,7 @@ class GenerateHardDriveEventsCommand < ExecutableCommand
   def on_execute()
     message = HddsChangedEventMessage.new
     message.server_name = Socket.gethostname
+    message.event_date = DateTime.now
     @context.exchange = EXCHANGE_MONITORING_DATA
     @context.routing_key = message.message_id
     @context.changed_drives_with_info.each do |k,v|

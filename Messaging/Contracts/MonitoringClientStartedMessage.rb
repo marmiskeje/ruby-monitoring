@@ -2,7 +2,7 @@ require_relative "Constants"
 require_relative "BaseMessage"
 
 class MonitoringClientStartedMessage < BaseMessage
-  attr_accessor :server_name, :ip_addresses
+  attr_accessor :server_name, :ip_addresses, :event_date
   
   def initialize()
     super()

@@ -11,21 +11,17 @@ class CreateOrUpdateServerIfNeededCommand < ExecutableCommand
       update_needed = false
       if all_servers.nil?
         all_servers = AllServersData.new
-        update_needed = true
       end
       if !all_servers.servers.has_key?(@context.server_name)
         all_servers.servers[@context.server_name] = ServerData.new
-        update_needed = true
       end
       server_data = all_servers.servers[@context.server_name]
       if !server_data.ip_addresses.subset?(@context.ip_addresses) || !@context.ip_addresses.subset?(server_data.ip_addresses)
         server_data.ip_addresses = @context.ip_addresses
-        update_needed = true
       end
-      if update_needed
-        @all_servers_storage.set(all_servers)
-        puts("updated all servers!!")
-      end
+      server_data.last_ping_date = @context.event_date
+      @all_servers_storage.set(all_servers)
+      puts("updated all servers!!")
     end
   end
 end
