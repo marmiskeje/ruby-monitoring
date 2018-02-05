@@ -24,12 +24,18 @@ class MonitoringCommandChainFactory
   def services_changed_chain(context)
     chain_creator = ExecutableCommandChainCreator.new
     chain_creator.add(CreateOrUpdateServicesDataCommand.new(context, @services_storage))
+    chain_creator.add(LoadServerConfigurationCommand.new(context))
+    chain_creator.add(CreateServiceEmailIfNeededCommand.new(context))
+    chain_creator.add(SendEmailsCommand.new(context))
     chain_creator.first_command
   end
 
   def hdds_changed_chain(context)
     chain_creator = ExecutableCommandChainCreator.new
     chain_creator.add(CreateOrUpdateHddsDataCommand.new(context, @hddsStorage))
+    chain_creator.add(LoadServerConfigurationCommand.new(context))
+    chain_creator.add(CreateHddEmailsIfNeededCommand.new(context))
+    chain_creator.add(SendEmailsCommand.new(context))
     chain_creator.first_command
   end
 end

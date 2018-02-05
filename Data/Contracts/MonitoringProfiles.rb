@@ -7,13 +7,13 @@ class MonitoringProfile
 end
 
 module MonitoringAction
-  NoAction = 0
-  EmailAction = 1
+  NoAction = "NoAction"
+  EmailAction = "EmailAction"
 end
 
 module MonitoringSeverity
-  Info = 0
-  Warning = 2
-  Critical = 4
-  Error = 8
+  Info = "Info"
+  Warning = "Warning"
+  Critical = "Critical"
+  Error = "Error"
 end

@@ -2,6 +2,7 @@ require 'thread'
 require "redis"
 require 'concurrent'
 require "bunny"
+require "gmail"
 
 require "./Internal/Server"
 
