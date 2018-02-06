@@ -1,0 +1,201 @@
+<!html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta content="IE=edge, chrome=1" http-equiv="X-UA-Compatible" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    
+    <!--
+      Este skus ulozit skripty a css do assets, ak nepomoze, tak:
+      presmeruj to na web a hotovo, to sa neda
+    -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular-cookies.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular-animate.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular-aria.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular-messages.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/@uirouter/angularjs@1.0.14/release/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="http://rawgit.com/grevory/angular-local-storage/master/dist/angular-local-storage.min.js"></script>
+    <title>Server monitoring</title>
+    <style>
+    html, body {
+    height: 100%;
+    font-size: 11pt;
+    }
+
+    .decent-bottom-space {
+        margin-bottom: 5px;
+    }
+
+    .webpage-header {
+        min-height: 3em;
+        border-bottom: solid 1px #d0d0d0;
+    }
+
+    .webpage-menu {
+        border-right: solid 1px #d0d0d0;
+        min-width: 150px;
+    }
+
+    .webpage-maincontent {
+        margin: 20px 10px 20px 10px;
+    }
+
+    .webpage-menu ul li {
+        cursor: pointer;
+        line-height: 50px;
+        min-width: 200px;
+    }
+    .webpage-menu ul li:hover {
+        text-decoration: underline;
+    }
+
+    .row {
+      line-height: 50px;
+    }
+
+    .header-row {
+      font-weight: lighter;
+      font-size: 14pt;
+      border-bottom: solid 1px #d0d0d0;
+    }
+
+    i.status-icon {
+      width: 10px;
+      margin-top: 12px;
+      height: 25px;
+      float: left;
+      background-color: Green;
+    }
+    i.status-online {
+      background-color: Green;
+    }
+    i.status-offline {
+      background-color: Red;
+    }
+    </style>
+    <script>
+      var app = angular.module("MonitoringWebApp", []);
+      app.controller("RootController", function($scope) {
+          $scope.servers = new Array();
+          $scope.services = new Array();
+          $scope.hdds = new Array();
+          for (i=0; i< 10; i++){
+            var server = new Object();
+            server.name = "Server" + i;
+            server.isOnline = i % 2 == 0;
+            $scope.servers.push(server);
+          }
+          for (y=0;y<5;y++){
+            var service = new Object();
+            service.display_name = "Service" + y;
+            service.state = y % 2 == 0 ? "running" : "stopped";
+            service.changeDate = new Date().toLocaleString();
+            $scope.services.push(service);
+          }
+          for (y=0;y<5;y++){
+            var hdd = new Object();
+            hdd.path = "sda" + y;
+            hdd.totalSpace = (y + 5) + "TB";
+            hdd.freeSpacePercentage = 8 + y;
+            hdd.changeDate = new Date().toLocaleString();
+            $scope.hdds.push(hdd);
+          }
+      }); 
+    </script>
+  </head>
+  <body ng-app="MonitoringWebApp" ng-controller="RootController">
+      <div class="container-fluid h-100">
+          <div class="row align-items-center webpage-header">
+              <div class="col-sm-2 col-3">
+                  <span>SERVER MONITORING</span>
+              </div>
+          </div>
+          <div class="row h-100">
+              <div class="col-1 webpage-menu">
+                  <h3>Servers:</h3>
+                  <nav class="navbar navbar-default">
+                      <ul class="nav navbar-nav" ng-repeat="s in servers">
+                          <li><i class="status-icon" ng-class="s.isOnline ? 'status-online' : 'status-offline'"></i>{{s.name}}</li>
+                      </ul>
+                  </nav>
+              </div>
+              <div class="col webpage-maincontent">
+                <h3>Server1</h3>
+                <br />
+                <h4>Services:</h4>
+                <div class="container-fluid">
+                    <div class="row header-row">
+                        <div class="col-2">
+                          <span>Name</span>
+                        </div>
+                        <div class="col-2">
+                            <span>State</span>
+                        </div>
+                        <div class="col-2">
+                            <span>Change date</span>
+                        </div>
+                    </div>
+                  <div class="row">
+                      <div class="container-fluid" ng-repeat="s in services">
+                        <div class="row">
+                          <div class="col-2">
+                            <span>{{s.display_name}}</span>
+                          </div>
+                          <div class="col-2">
+                              <i class="status-icon" ng-class="s.state == 'running' ? 'status-online' : 'status-offline'"></i><span>{{s.state}}</span>
+                          </div>
+                          <div class="col-2">
+                              <span>{{s.changeDate}}</span>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                </div>
+                <br />
+                <h4>HDDs:</h4>
+                <div class="container-fluid">
+                    <div class="row header-row">
+                        <div class="col-2">
+                          <span>Path</span>
+                        </div>
+                        <div class="col-2">
+                            <span>Total space</span>
+                        </div>
+                        <div class="col-2">
+                            <span>Free space</span>
+                        </div>
+                        <div class="col-2">
+                            <span>Change date</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="container-fluid" ng-repeat="d in hdds">
+                            <div class="row">
+                              <div class="col-2">
+                                <span>{{d.path}}</span>
+                              </div>
+                              <div class="col-2">
+                                  <span>{{d.totalSpace}}</span>
+                                </div>
+                              <div class="col-2">
+                                  <i class="status-icon" ng-class="d.freeSpacePercentage >= 10 ? 'status-online' : 'status-offline'"></i><span ng-bind-template="{{d.freeSpacePercentage.toFixed(2)}} %"></span>
+                              </div>
+                              <div class="col-2">
+                                  <span>{{d.changeDate}}</span>
+                              </div>
+                            </div>
+                          </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+      </div> 
+  </body>
+</html>
