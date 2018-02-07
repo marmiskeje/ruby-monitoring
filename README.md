@@ -1,6 +1,6 @@
 # Server monitoring
 
-Solution for simple server monitoring.
+Solution for simple server monitoring (CoreService + WindowsClientService + simple UI WebApp [Rails+AngularJS]).
 
 Supported monitoring of:
 1. Services (state, name, display_name)
