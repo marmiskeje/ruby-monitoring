@@ -3,7 +3,9 @@ class SettingsService
   def initialize()
     @watched_services = Set.new
     @watched_drives = Set.new
-    @watched_services.add("Tomcat7")
-    @watched_drives.add("D:\\")
+  end
+
+  def server_name
+    Socket.gethostname
   end
 end

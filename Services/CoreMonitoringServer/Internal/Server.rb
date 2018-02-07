@@ -93,10 +93,12 @@ class Server
           @communication_queue.enqueue(@chain_factory.server_ping_chain(context))
         when MESSAGE_ID_SERVICES_CHANGED_EVENT
           context = ServicesChangedContext.new
+          context.server_name = message.server_name
           context.message = message
           @services_data_queue.enqueue(@chain_factory.services_changed_chain(context))
         when MESSAGE_ID_HDDS_CHANGED_EVENT
           context = HddsChangedContext.new
+          context.server_name = message.server_name
           context.message = message
           @drives_data_queue.enqueue(@chain_factory.hdds_changed_chain(context))
       end

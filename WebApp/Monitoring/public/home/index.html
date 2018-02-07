@@ -7,10 +7,20 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     
-    <!--
-      Este skus ulozit skripty a css do assets, ak nepomoze, tak:
-      presmeruj to na web a hotovo, to sa neda
+    <!-- local development
+    <link rel="stylesheet" href="http://localhost:49992/assets/bootstrap.css">
+    <script type="text/javascript" src="http://localhost:49992/assets/jquery.js"></script>
+    <script src="http://localhost:49992/assets/popper.js"></script>
+    <script src="http://localhost:49992/assets/bootstrap.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-cookies.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-animate.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-aria.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-messages.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-ui-router.js"></script>
+    <script type="text/javascript" src="http://localhost:49992/assets/angular-local-storage.js"></script>
     -->
+    
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
@@ -22,6 +32,7 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular-messages.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/@uirouter/angularjs@1.0.14/release/angular-ui-router.min.js"></script>
     <script type="text/javascript" src="http://rawgit.com/grevory/angular-local-storage/master/dist/angular-local-storage.min.js"></script>
+  
     <title>Server monitoring</title>
     <style>
     html, body {
@@ -67,8 +78,9 @@
     }
 
     i.status-icon {
-      width: 10px;
+      width: 12px;
       margin-top: 12px;
+      margin-right:5px;
       height: 25px;
       float: left;
       background-color: Green;
@@ -79,13 +91,24 @@
     i.status-offline {
       background-color: Red;
     }
+    i.status-info {
+      background-color: Green;
+    }
+    i.status-warning {
+      background-color: Orange;
+    }
+    i.status-critical {
+      background-color: Red;
+    }
     </style>
     <script>
       var app = angular.module("MonitoringWebApp", []);
-      app.controller("RootController", function($scope) {
+      app.controller("RootController", function($scope, $http) {
           $scope.servers = new Array();
           $scope.services = new Array();
           $scope.hdds = new Array();
+          $scope.currentServer = null;
+          /* dummy data
           for (i=0; i< 10; i++){
             var server = new Object();
             server.name = "Server" + i;
@@ -106,7 +129,78 @@
             hdd.freeSpacePercentage = 8 + y;
             hdd.changeDate = new Date().toLocaleString();
             $scope.hdds.push(hdd);
+          }*/
+          $scope.actions = new Object();
+          $scope.actions.selectServer = function(s){
+            $scope.currentServer = s;
           }
+          var getData = function(isInit) {
+            $http.get("/api/servers")
+              .then(function(httpResponse) {
+                $scope.servers = new Array();
+                  var data = httpResponse.data;
+                  for (var i = 0; i < data.length; i++) {
+                    var server = data[i];
+                    var to_add = new Object();
+                    to_add.name = server.name;
+                    to_add.isOnline = server.is_online;
+                    $scope.servers.push(to_add);
+                    if (isInit && i == 0){
+                      $scope.currentServer = to_add;
+                    }
+                  }
+              }, function(httpResponse) {
+                  alert("An error occured - get servers");
+            });
+            if ($scope.currentServer) {
+              $http.get("/api/server_data/" + $scope.currentServer.name)
+              .then(function(httpResponse) {
+                $scope.services = new Array();
+                $scope.hdds = new Array();
+                  var data = httpResponse.data;
+                  for (var i = 0; i < data.services.length; i++) {
+                    var service = data.services[i];
+                    var to_add = new Object();
+                    to_add.display_name = service.display_name;
+                    to_add.state = service.state;
+                    if (service.change_date) {
+                      to_add.changeDate = new Date(service.change_date).toLocaleString();
+                    }
+                    $scope.services.push(to_add);
+                  }
+                  for (var i = 0; i < data.hdds.length; i++) {
+                    var hdd = data.hdds[i];
+                    var to_add = new Object();
+                    to_add.path = hdd.path;
+                    to_add.totalSpace = formatBytes(hdd.total_bytes);
+                    to_add.freeSpace = formatBytes(hdd.free_bytes);
+                    to_add.freeSpacePercentage = calculatePercentage(hdd.free_bytes, hdd.total_bytes)
+                    if (hdd.change_date) {
+                      to_add.changeDate = new Date(hdd.change_date).toLocaleString();
+                    }
+                    $scope.hdds.push(to_add);
+                  }
+              }, function(httpResponse) {
+                alert("An error occured - get server_data");
+            });
+            }
+            var formatBytes = function(bytes, decimals) {
+              if(bytes == 0) return '0 Bytes';
+              var k = 1024,
+                  dm = decimals || 2,
+                  sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+                  i = Math.floor(Math.log(bytes) / Math.log(k));
+              return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            }
+            var calculatePercentage = function(v1, v2){
+              if (v2 > 0)
+                return (v1 / v2) * 100.0
+              end
+              return 0
+            }
+          } 
+          getData(true);
+          setInterval(getData, 1000);
       }); 
     </script>
   </head>
@@ -122,12 +216,12 @@
                   <h3>Servers:</h3>
                   <nav class="navbar navbar-default">
                       <ul class="nav navbar-nav" ng-repeat="s in servers">
-                          <li><i class="status-icon" ng-class="s.isOnline ? 'status-online' : 'status-offline'"></i>{{s.name}}</li>
+                          <li ng-click="actions.selectServer(s)"><i class="status-icon" ng-class="s.isOnline ? 'status-online' : 'status-offline'"></i>{{s.name}}</li>
                       </ul>
                   </nav>
               </div>
-              <div class="col webpage-maincontent">
-                <h3>Server1</h3>
+              <div class="col webpage-maincontent" ng-show="currentServer.name != null">
+                <h3>{{currentServer.name}}</h3>
                 <br />
                 <h4>Services:</h4>
                 <div class="container-fluid">
@@ -172,6 +266,9 @@
                             <span>Free space</span>
                         </div>
                         <div class="col-2">
+                            <span>Free percentage</span>
+                        </div>
+                        <div class="col-2">
                             <span>Change date</span>
                         </div>
                     </div>
@@ -185,7 +282,11 @@
                                   <span>{{d.totalSpace}}</span>
                                 </div>
                               <div class="col-2">
-                                  <i class="status-icon" ng-class="d.freeSpacePercentage >= 10 ? 'status-online' : 'status-offline'"></i><span ng-bind-template="{{d.freeSpacePercentage.toFixed(2)}} %"></span>
+                                  <span>{{d.freeSpace}}</span>
+                                </div>
+                              <div class="col-2">
+                                  <i class="status-icon" ng-class="d.freeSpacePercentage >= 15 ? 'status-info' : (d.freeSpacePercentage >= 10 ? 'status-warning' : 'status-critical')"></i>
+                                  <span ng-bind-template="{{d.freeSpacePercentage.toFixed(2)}} %"></span>
                               </div>
                               <div class="col-2">
                                   <span>{{d.changeDate}}</span>

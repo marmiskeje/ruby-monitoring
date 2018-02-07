@@ -11,7 +11,7 @@ class CreateHddEmailsIfNeededCommand < ExecutableCommand
         free_space_percentage = ((d.free_bytes / d.total_bytes.to_f) * 100.0) unless d.total_bytes == 0
         profile = nil
         hdd_conf.free_space_percentage_profiles.each do |k, v|
-          if free_space_percentage <= k
+          if free_space_percentage >= k
             profile = v
             break
           end

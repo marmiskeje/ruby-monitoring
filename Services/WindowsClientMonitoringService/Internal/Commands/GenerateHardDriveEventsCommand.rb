@@ -1,13 +1,14 @@
 require 'date'
 class GenerateHardDriveEventsCommand < ExecutableCommand
-  def initialize(context)
+  def initialize(context, settings_service)
     super()
     @context = context
+    @settings_service = settings_service
   end
 
   def on_execute()
     message = HddsChangedEventMessage.new
-    message.server_name = Socket.gethostname
+    message.server_name = @settings_service.server_name
     message.event_date = DateTime.now
     @context.exchange = EXCHANGE_MONITORING_DATA
     @context.routing_key = message.message_id

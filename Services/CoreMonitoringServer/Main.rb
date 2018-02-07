@@ -9,12 +9,18 @@ require "./Internal/Server"
 mq_client = Bunny.new
 mq_client.start
 redis = Redis.new
+
 Server.new(mq_client, redis)
 
 gets()
 mq_client.stop
 redis.close
 
+# redis.del("Monitoring.AllServers")
+# redis.del("Monitoring.Server.Manager.Services")
+# redis.del("Monitoring.Server.Manager.Hdds")
+# redis.del("Monitoring.Server.TstAppServer.Services")
+# redis.del("Monitoring.Server.TstAppServer.Hdds")
 #redis.set("test", "hodnota", {:ex => 10})
 # queue = CommandProcessingQueue.new
 

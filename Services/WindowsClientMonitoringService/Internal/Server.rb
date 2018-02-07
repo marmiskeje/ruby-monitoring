@@ -109,8 +109,8 @@ class Server
 
   def create_subscriptions(mq_client)
     ch = mq_client.create_channel
-    queue = ch.queue(Socket.gethostname + "ClientQueue", opts = {:durable => false, :exclusive => true})
-    queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_CONFIGURATION + "." + Socket.gethostname})
+    queue = ch.queue(@settings_service.server_name + "ClientQueue", opts = {:durable => false, :exclusive => true})
+    queue.bind(EXCHANGE_MONITORING_COMMUNICATION, opts = {:routing_key => MESSAGE_ID_MONITORING_CLIENT_CONFIGURATION + "." + @settings_service.server_name})
     
     queue.subscribe do |delivery_info, metadata, payload|
       message = Marshal::load(payload)
