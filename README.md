@@ -13,3 +13,5 @@ Supported profiles with severity (info, warning, critical, error) and actions (e
 Prerequisites:
 1. installed RabbitMQ
 2. installed RedisDB
+
+![GitHub Logo](/ruby-server-monitoring.png)
